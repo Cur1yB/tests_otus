@@ -1,26 +1,38 @@
 import unittest
-from unittest.mock import Mock, mock_open, patch
-from file_example import FileService
+from unittest.mock import Mock
+from db_example import UserService
 
-class TestFileService(unittest.TestCase):
+class TestUserService(unittest.TestCase):
 
     def setUp(self):
-        # Создаем mock-объект для file_reader
-        self.file_reader = Mock()
-        self.service = FileService(self.file_reader)
+        # Создаем mock-объект для db_client
+        self.db_client = Mock()
+        self.service = UserService(self.db_client)
 
-    @patch('builtins.open', new_callable=mock_open, read_data='file content')
-    def test_read_file(self, mock_file):
-        file_path = 'test.txt'
+    def test_add_user(self):
+        # Определяем параметры для теста
+        user_id = "123"
+        user_data = {"name": "John Doe"}
 
-        # Настраиваем mock-объект для метода open
-        self.file_reader.open = mock_file
-        content = self.service.read_file(file_path)
+        # Вызываем метод add_user
+        self.service.add_user(user_id, user_data)
 
-        # Проверяем, что содержимое файла соответствует ожиданиям
-        self.assertEqual(content, 'file content')
-        # Проверяем, что метод open был вызван с правильными параметрами
-        self.file_reader.open.assert_called_with(file_path, 'r')
+        # Проверяем, что метод insert был вызван с правильными параметрами
+        self.db_client.insert.assert_called_with(user_id, user_data)
+
+    def test_get_user(self):
+        user_id = "123"
+        user_data = {"name": "John Doe"}
+        # Настраиваем mock-объект для метода find
+        self.db_client.find.return_value = user_data
+
+        # Вызываем метод get_user
+        result = self.service.get_user(user_id)
+
+        # Проверяем, что результат соответствует ожиданиям
+        self.assertEqual(result, user_data)
+        # Проверяем, что метод find был вызван с правильными параметрами
+        self.db_client.find.assert_called_with(user_id)
 
 if __name__ == "__main__":
     unittest.main()
