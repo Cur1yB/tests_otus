@@ -1,29 +1,26 @@
 import unittest
-from unittest.mock import Mock
-from email_example import EmailService
+from unittest.mock import Mock, mock_open, patch
+from file_example import FileService
 
-class TestEmailService(unittest.TestCase):
+class TestFileService(unittest.TestCase):
 
     def setUp(self):
-        # Создаем mock-объект для smtp_client
-        self.smtp_client = Mock()
-        self.service = EmailService(self.smtp_client)
+        # Создаем mock-объект для file_reader
+        self.file_reader = Mock()
+        self.service = FileService(self.file_reader)
 
-    def test_send_email(self):
-        # Определяем параметры для теста
-        recipient = "test@example.com"
-        subject = "Test Subject"
-        body = "This is a test email."
+    @patch('builtins.open', new_callable=mock_open, read_data='file content')
+    def test_read_file(self, mock_file):
+        file_path = 'test.txt'
 
-        # Вызываем метод send_email
-        self.service.send_email(recipient, subject, body)
+        # Настраиваем mock-объект для метода open
+        self.file_reader.open = mock_file
+        content = self.service.read_file(file_path)
 
-        # Проверяем, что метод send_message был вызван с правильными параметрами
-        self.smtp_client.send_message.assert_called_with({
-            "to": recipient,
-            "subject": subject,
-            "body": body
-        })
+        # Проверяем, что содержимое файла соответствует ожиданиям
+        self.assertEqual(content, 'file content')
+        # Проверяем, что метод open был вызван с правильными параметрами
+        self.file_reader.open.assert_called_with(file_path, 'r')
 
 if __name__ == "__main__":
     unittest.main()
